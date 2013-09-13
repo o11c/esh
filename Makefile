@@ -1,6 +1,7 @@
 CFLAGS = -g -O
 
-CFLAGS += -Wall -Wextra
+CFLAGS += -Werror=all -Werror=extra -Werror=format -Werror=unused
+CFLAGS += -Werror=redundant-decls -Werror=missing-declarations
 
 override CFLAGS += -std=gnu99
 

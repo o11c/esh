@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 __attribute__((noreturn))
+static
 void die(const char *msg)
 {
     fprintf(stderr, "%s\n", msg);
@@ -27,6 +28,7 @@ void die(const char *msg)
 }
 
 __attribute__((noreturn))
+static
 void edie(int err, const char *msg)
 {
     errno = err;
@@ -34,7 +36,7 @@ void edie(int err, const char *msg)
     exit(1);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char **argv __attribute__((unused)))
 {
     char *line;
     int err;

@@ -39,6 +39,7 @@ void input_close(Input *input)
     input->_fd = -1;
 }
 
+static
 size_t input_getc(Input *input, char *out)
 {
     if (!input->_clen)

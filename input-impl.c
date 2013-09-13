@@ -56,7 +56,7 @@ void inputbuffer_erase(InputBuffer *ib, size_t delta)
 }
 
 
-size_t input_expr_len(const char *expr)
+size_t input_expr_len(const char *expr __attribute__((unused)))
 {
     // TODO return 2-4 for utf-8 chars
     // TODO return arbitrary amounts for special keys

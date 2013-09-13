@@ -20,11 +20,13 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 __attribute__((noreturn))
+static
 void usage()
 {
     fprintf(stderr, "Usage: savetty program args...\n");
@@ -33,25 +35,49 @@ void usage()
 }
 
 __attribute__((noreturn))
+static
 void edie(const char *msg)
 {
     fprintf(stderr, "%s: %m\n", msg);
     exit(1);
 }
 
+static
 int spawn_and_wait(char **argv)
 {
+    // I *think* this is how signals need to be handled.
+    sigset_t old_mask, new_mask;
+    sigfillset(&new_mask);
+    // signals that are too dangerous to play with
+    sigdelset(&new_mask, SIGBUS);
+    sigdelset(&new_mask, SIGFPE);
+    sigdelset(&new_mask, SIGILL);
+    sigdelset(&new_mask, SIGSEGV);
+    if (-1 == sigprocmask(SIG_BLOCK, &new_mask, &old_mask))
+        edie("sigprocmask");
+
     pid_t pid = fork();
     if (pid == -1)
         edie("fork");
     if (pid == 0)
     {
+        if (-1 == sigprocmask(SIG_SETMASK, &old_mask, NULL))
+            edie("sigprocmask");
         // child
         execvp(argv[0], argv);
         // failed
         edie("exec");
     }
     // parent
+    for (int i = 1; i < _NSIG; ++i)
+    {
+        if (!sigismember(&new_mask, i))
+            continue;
+        // auto-generated signals are always sent to the whole process group
+        signal(i, SIG_IGN);
+    }
+    if (-1 == sigprocmask(SIG_SETMASK, &old_mask, NULL))
+        edie("sigprocmask");
     int status = 0;
     wait(&status);
     return status;
@@ -69,11 +95,13 @@ int main(int argc, char **argv)
         edie("tcgetattr");
     int status = spawn_and_wait(argv + 1);
     if (tcsetattr(tty, TCSAFLUSH, &saved) == -1)
-        edie("tcgetattr");
+        edie("tcsetattr");
     close(tty);
     if (WIFSIGNALED(status))
     {
-        fprintf(stderr, "%s%s\n", strsignal(WTERMSIG(status)), WCOREDUMP(status) ? " (core dumped)" : "");
+        fprintf(stderr, "%s%s\n",
+                strsignal(WTERMSIG(status)),
+                WCOREDUMP(status) ? " (core dumped)" : "");
         return 128 + WTERMSIG(status);
     }
 
