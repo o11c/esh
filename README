@@ -1,2 +1,7 @@
-This is an implementation of EggShell, without any of the silly limits
-of other versions.
+Nacreous EggShell is a shell with no major limitations nor features.
+
+To build, run:
+  make esh
+
+There is also a useful tool, savetty (make savetty) that can restore your
+terminal to a (somewhat) sane state even if a buggy application crashes.
