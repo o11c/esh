@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "input.h"
+#include "io.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -24,40 +24,45 @@
 #include "input-impl.h"
 #include "mem.h"
 
-int input_open(Input *input, const char *path)
+int io_open_tty(IO *io, const char *path)
 {
-    input->_fd = open(path, O_RDONLY);
-    if (input->_fd == -1)
+    int fd = open(path, O_RDWR | O_CLOEXEC);
+    if (fd == -1)
         return errno;
-    input->_clen = 0;
+    io->_read_fd = fd;
+    io->_write_fd = fd;
+    io->_clen = 0;
     return 0;
 }
 
-void input_close(Input *input)
+void io_close(IO *io)
 {
-    close(input->_fd);
-    input->_fd = -1;
+    close(io->_read_fd);
+    if (io->_write_fd != io->_read_fd)
+        close(io->_write_fd);
+    io->_read_fd = -1;
+    io->_write_fd = -1;
 }
 
 static
-size_t input_getc(Input *input, char *out)
+size_t input_getc(IO *io, char *out)
 {
-    if (!input->_clen)
+    if (!io->_clen)
     {
-        ssize_t rv = read(input->_fd, input->_cache, sizeof(input->_cache));
+        ssize_t rv = read(io->_read_fd, io->_cache, sizeof(io->_cache));
         if (rv == -1)
             return 0;
         if (rv == 0)
             return 0;
-        input->_clen = rv;
+        io->_clen = rv;
     }
-    *out = input->_cache[0];
-    memmove(input->_cache, input->_cache + 1, input->_clen -= 1);
+    *out = io->_cache[0];
+    memmove(io->_cache, io->_cache + 1, io->_clen -= 1);
     return 1;
 }
 
 
-char *input_line(Input *input, InputHook hook, void *userdata)
+char *input_line(IO *io, InputHook hook, void *userdata)
 {
     InputBuffer ib;
     ib._cap = 16;
@@ -69,7 +74,7 @@ char *input_line(Input *input, InputHook hook, void *userdata)
         char buf[83];
         const char *expr = buf;
         int bufi = 0;
-        if (!input_getc(input, &buf[bufi]))
+        if (!input_getc(io, &buf[bufi]))
             expr = NULL;
         // TODO put a loop to handle non-ASCII
         hook(&ib, expr, userdata);

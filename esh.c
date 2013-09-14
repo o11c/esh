@@ -13,7 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "input.h"
+#include "io.h"
 
 #include <errno.h>
 #include <stdio.h>
@@ -44,8 +44,8 @@ int main(int argc, char **argv __attribute__((unused)))
     if (argc != 1)
         die("This program takes no options");
 
-    Input tty;
-    err = input_open(&tty, "/dev/tty");
+    IO tty;
+    err = io_open_tty(&tty, "/dev/tty");
     if (err)
         edie(err, "Failed to open TTY");
 
@@ -55,5 +55,5 @@ int main(int argc, char **argv __attribute__((unused)))
         free(line);
     }
     puts("Got EOF");
-    input_close(&tty);
+    io_close(&tty);
 }

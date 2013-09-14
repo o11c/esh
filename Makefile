@@ -8,9 +8,9 @@ override CFLAGS += -std=gnu99
 .PHONY: all
 all: esh savetty
 
-esh: esh.o input.o input-impl.o
-esh.o: esh.c input.h
-input.o: input.c input.h input-impl.h mem.h
+esh: esh.o io.o input-impl.o
+esh.o: esh.c io.h
+io.o: io.c io.h input-impl.h mem.h
 input-impl.o: input-impl.c input-impl.h mem.h
 
 savetty: savetty.o
