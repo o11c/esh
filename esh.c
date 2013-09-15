@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+#include <unistd.h>
+
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -64,6 +66,23 @@ char **split_line(char *line)
     return words;
 }
 
+static
+void builtin_exit(const char *arg1)
+{
+    exit(arg1 ? atoi(arg1) : 0);
+}
+
+static
+void builtin_cd(const char *arg1)
+{
+    if (arg1 == NULL)
+        arg1 = getenv("HOME");
+    if (arg1 == NULL)
+        fprintf(stderr, "$HOMEless!\n");
+    else
+        chdir(arg1);
+}
+
 int main(int argc, char **argv __attribute__((unused)), char **envp)
 {
     if (argc != 1)
@@ -87,7 +106,11 @@ int main(int argc, char **argv __attribute__((unused)), char **envp)
         char **lines = split_line(line);
         if (*lines)
         {
-            if (background)
+            if (strcmp(lines[0], "exit") == 0)
+                builtin_exit(lines[1]);
+            else if (strcmp(lines[0], "cd") == 0)
+                builtin_cd(lines[1]);
+            else if (background)
                 spawn_and_forget(lines, envp);
             else
                 spawn_and_wait(lines, envp);
