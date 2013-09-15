@@ -62,8 +62,9 @@ size_t input_getc(IO *io, char *out)
 }
 
 
-char *input_line(IO *io, InputHook hook, void *userdata)
+char *input_line(const char *prompt, IO *io, InputHook hook, void *userdata)
 {
+    write(io->_write_fd, prompt, strlen(prompt));
     InputBuffer ib;
     ib._cap = 16;
     ib._mem = xmalloc(ib._cap);

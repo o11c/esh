@@ -13,11 +13,12 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#include "io.h"
-
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "io.h"
+#include "spawn.h"
 
 __attribute__((noreturn))
 static
@@ -36,23 +37,23 @@ void edie(int err, const char *msg)
     exit(1);
 }
 
-int main(int argc, char **argv __attribute__((unused)))
+int main(int argc, char **argv __attribute__((unused)), char **envp)
 {
-    char *line;
-    int err;
-
     if (argc != 1)
         die("This program takes no options");
 
     IO tty;
-    err = io_open_tty(&tty, "/dev/tty");
+    int err = io_open_tty(&tty, "/dev/tty");
     if (err)
         edie(err, "Failed to open TTY");
 
-    while ((line = input_line(&tty, inputhook_stupid, (void *)NULL)))
+    for (char *line; (line = input_line("esh> ", &tty, inputhook_stupid, (void *)NULL)); free(line))
     {
-        printf("Got line >>> %s <<<\n", line);
-        free(line);
+        if (!*line)
+            continue;
+        // TODO actually split the line
+        char *lines[2] = {line, NULL};
+        spawn_and_wait(lines, envp);
     }
     puts("Got EOF");
     io_close(&tty);

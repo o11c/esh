@@ -42,7 +42,7 @@ typedef void (*InputHook)(InputBuffer *, const char *expr, void *userdata);
 // Read until the hook indicates 'accept' or 'eof'.
 // Typically, this happens when 'newline' is pressed.
 // The result is malloced, or NULL on EOF.
-char *input_line(IO *io, InputHook hook, void *userdata);
+char *input_line(const char *prompt, IO *io, InputHook hook, void *userdata);
 
 // Basic implementation of an input hook, just handles backspace and enter.
 // The userdata must be NULL.
