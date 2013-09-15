@@ -16,6 +16,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "io.h"
 #include "spawn.h"
@@ -51,9 +52,20 @@ int main(int argc, char **argv __attribute__((unused)), char **envp)
     {
         if (!*line)
             continue;
+        size_t len = strlen(line);
+        bool background = line[len - 1] == '&';
+        if (background)
+        {
+            line[len - 1] = '\0';
+            if (!*line)
+                continue;
+        }
         // TODO actually split the line
         char *lines[2] = {line, NULL};
-        spawn_and_wait(lines, envp);
+        if (background)
+            spawn_and_forget(lines, envp);
+        else
+            spawn_and_wait(lines, envp);
     }
     puts("Got EOF");
     io_close(&tty);

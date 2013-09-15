@@ -17,5 +17,6 @@
 #define SPAWN_H
 
 int spawn_and_wait(char **argv, char **envp);
+void spawn_and_forget(char **argv, char **envp);
 
 #endif //SPAWN_H

@@ -26,10 +26,12 @@
 #include <string.h>
 
 static
-const char *maybe_getenv(const char *key, const char *def)
+const char *confstr_path()
 {
-    const char *value = getenv(key);
-    return value ?: def;
+    size_t n = confstr(_CS_PATH, NULL, 0);
+    char *rv = malloc(n);
+    confstr(_CS_PATH, rv, n);
+    return rv;
 }
 
 static
@@ -54,7 +56,9 @@ void silly_execvp(const char *frist, char **args, char **env)
     }
     static const char *PATH = NULL;
     if (PATH == NULL)
-        PATH = maybe_getenv("PATH", "/bin:/usr/bin");
+        PATH = getenv("PATH");
+    if (PATH == NULL)
+        PATH = confstr_path();
     bool checked_cwd = false;
     size_t fl = strlen(frist);
     char *buf = NULL;
@@ -131,4 +135,38 @@ int spawn_and_wait(char **argv, char **envp)
     // TODO consume extra signals here?
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
     return status;
+}
+
+void spawn_and_forget(char **argv, char **envp)
+{
+    fflush(stderr);
+    // if we were a real shell we would actually wait later.
+    // But I'm not going to write that kind of code without C++.
+    pid_t tmp = fork();
+    if (tmp == -1)
+    {
+        fprintf(stderr, "fork: %m\n");
+        return;
+    }
+    if (tmp)
+    {
+        // not long
+        waitpid(tmp, NULL, 0);
+        return;
+    }
+    pid_t child = fork();
+    if (child == -1)
+    {
+        fprintf(stderr, "fork: %m\n");
+    }
+    if (child)
+    {
+        // see?
+        _exit(0);
+    }
+    // We are now alone (except for the session stuff. Is esh supposed to
+    // set its own session in the first place? I think so).
+    silly_execvp(argv[0], argv, envp);
+    // failed
+    fprintf(stderr, "exec: %s: %m\n", argv[0]);
 }
