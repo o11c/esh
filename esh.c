@@ -13,6 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+#include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +40,30 @@ void edie(int err, const char *msg)
     exit(1);
 }
 
+static
+char **split_line(char *line)
+{
+    size_t alloc = 0;
+    for (size_t i = 0; line[i]; ++i)
+    {
+        unsigned char c = line[i];
+        if (isspace(c))
+            alloc++;
+    }
+    char **words = malloc((alloc + 2) * sizeof(char *));
+    size_t wi = 0;
+    // TODO handle quoting
+    while (line += strspn(line, " \f\n\r\t\v"), *line)
+    {
+        words[wi++] = line;
+        line += strcspn(line, " \f\n\r\t\v");
+        if (*line)
+            *line++ = '\0';
+    }
+    words[wi] = NULL;
+    return words;
+}
+
 int main(int argc, char **argv __attribute__((unused)), char **envp)
 {
     if (argc != 1)
@@ -50,23 +76,24 @@ int main(int argc, char **argv __attribute__((unused)), char **envp)
 
     for (char *line; (line = input_line("esh> ", &tty, inputhook_stupid, (void *)NULL)); free(line))
     {
-        if (!*line)
-            continue;
         size_t len = strlen(line);
-        bool background = line[len - 1] == '&';
+        bool background = len && line[len - 1] == '&';
         if (background)
         {
             line[len - 1] = '\0';
             if (!*line)
                 continue;
         }
-        // TODO actually split the line
-        char *lines[2] = {line, NULL};
-        if (background)
-            spawn_and_forget(lines, envp);
-        else
-            spawn_and_wait(lines, envp);
+        char **lines = split_line(line);
+        if (*lines)
+        {
+            if (background)
+                spawn_and_forget(lines, envp);
+            else
+                spawn_and_wait(lines, envp);
+        }
+        free(lines);
     }
-    puts("Got EOF");
+    puts("");
     io_close(&tty);
 }
