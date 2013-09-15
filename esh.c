@@ -67,12 +67,6 @@ char **split_line(char *line)
 }
 
 static
-void builtin_exit(const char *arg1)
-{
-    exit(arg1 ? atoi(arg1) : 0);
-}
-
-static
 void builtin_cd(const char *arg1)
 {
     if (arg1 == NULL)
@@ -93,6 +87,7 @@ int main(int argc, char **argv __attribute__((unused)), char **envp)
     if (err)
         edie(err, "Failed to open TTY");
 
+    int exit_value = 0;
     for (char *line; (line = input_line("esh> ", &tty, inputhook_stupid, (void *)NULL)); free(line))
     {
         size_t len = strlen(line);
@@ -107,7 +102,13 @@ int main(int argc, char **argv __attribute__((unused)), char **envp)
         if (*lines)
         {
             if (strcmp(lines[0], "exit") == 0)
-                builtin_exit(lines[1]);
+            {
+                if (lines[1])
+                    exit_value = atoi(lines[1]);
+                free(lines);
+                free(line);
+                break;
+            }
             else if (strcmp(lines[0], "cd") == 0)
                 builtin_cd(lines[1]);
             else if (background)
@@ -119,4 +120,5 @@ int main(int argc, char **argv __attribute__((unused)), char **envp)
     }
     puts("");
     io_close(&tty);
+    return exit_value;
 }

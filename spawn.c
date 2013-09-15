@@ -132,7 +132,11 @@ int spawn_and_wait(char **argv, char **envp)
     // parent
     int status = 0;
     waitpid(pid, &status, 0);
-    // TODO consume extra signals here?
+    struct timespec timeout;
+    timeout.tv_sec = 0;
+    timeout.tv_nsec = 0;
+    while (sigtimedwait(&new_mask, NULL, &timeout) > 0)
+    {}
     sigprocmask(SIG_SETMASK, &old_mask, NULL);
     return status;
 }

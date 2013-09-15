@@ -18,6 +18,8 @@
 
 #include <stdbool.h>
 
+#include "key.h"
+
 typedef struct IO IO;
 // class for an input source, often a tty
 struct IO
@@ -37,7 +39,7 @@ void io_close(IO *);
 
 typedef struct InputBuffer InputBuffer;
 
-typedef void (*InputHook)(InputBuffer *, const char *expr, void *userdata);
+typedef void (*InputHook)(IO *io, InputBuffer *, Key key, void *userdata);
 
 // Read until the hook indicates 'accept' or 'eof'.
 // Typically, this happens when 'newline' is pressed.
@@ -46,6 +48,6 @@ char *input_line(const char *prompt, IO *io, InputHook hook, void *userdata);
 
 // Basic implementation of an input hook, just handles backspace and enter.
 // The userdata must be NULL.
-void inputhook_stupid(InputBuffer *, const char *, void *);
+void inputhook_stupid(IO *io, InputBuffer *, Key, void *);
 
 #endif //INPUT_H

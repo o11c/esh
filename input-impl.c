@@ -56,17 +56,8 @@ void inputbuffer_erase(InputBuffer *ib, size_t delta)
 }
 
 
-size_t input_expr_len(const char *expr __attribute__((unused)))
+void inputbuffer_insert(InputBuffer *ib, const char *expr, size_t n)
 {
-    // TODO return 2-4 for utf-8 chars
-    // TODO return arbitrary amounts for special keys
-    return 1;
-}
-
-
-void inputbuffer_insert(InputBuffer *ib, const char *expr)
-{
-    size_t n = input_expr_len(expr);
     inputbuffer_expand(ib, n);
     memcpy(ib->_mem + ib->_index, expr, n);
     ib->_index += n;

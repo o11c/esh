@@ -8,10 +8,11 @@ override CFLAGS += -std=gnu99 -D_GNU_SOURCE
 .PHONY: all
 all: esh savetty
 
-esh: esh.o io.o input-impl.o spawn.o
+esh: esh.o io.o input-impl.o key.o spawn.o
 esh.o: esh.c io.h spawn.h
-io.o: io.c io.h input-impl.h mem.h
+io.o: io.c io.h input-impl.h key.h mem.h
 input-impl.o: input-impl.c input-impl.h mem.h
+key.o: key.c key.h
 spawn.o: spawn.c spawn.h
 
 savetty: savetty.o

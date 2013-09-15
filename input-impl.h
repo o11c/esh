@@ -37,7 +37,7 @@ void inputbuffer_erase(InputBuffer *, size_t);
 
 size_t input_expr_len(const char *expr);
 
-void inputbuffer_insert(InputBuffer *, const char *);
+void inputbuffer_insert(InputBuffer *, const char *, size_t);
 void inputbuffer_del_after(InputBuffer *);
 void inputbuffer_del_before(InputBuffer *);
 
