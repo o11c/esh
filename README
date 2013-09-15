@@ -5,3 +5,8 @@ To build, run:
 
 There is also a useful tool, savetty (make savetty) that can restore your
 terminal to a (somewhat) sane state even if a buggy application crashes.
+
+Note: esh's builtin line editing does not work correctly for some forms of
+input. Particularly, UTF-8 and special keys (such as arrows) do not work
+at all; neither does the 'refresh' action. I would fix this, but I have too
+many other things that I need to do ...
